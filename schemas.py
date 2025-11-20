@@ -1,48 +1,45 @@
 """
-Database Schemas
+Database Schemas for AURCA SOUND
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Each Pydantic model corresponds to a MongoDB collection (lowercased class name).
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import List, Optional
+from datetime import datetime
 
-# Example schemas (replace with your own):
+class Artist(BaseModel):
+    stage_name: str = Field(..., description="Public artist name")
+    user_id: Optional[str] = Field(None, description="Linked auth user id")
+    avatar_url: Optional[str] = None
+    bio: Optional[str] = None
+    socials: Optional[dict] = Field(default_factory=dict)
+    dsps: Optional[dict] = Field(default_factory=dict)
 
-class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
-    name: str = Field(..., description="Full name")
-    email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+class Track(BaseModel):
+    title: str = Field(..., description="Track title")
+    primary_artist: str = Field(..., description="Primary artist display name")
+    featuring: List[str] = Field(default_factory=list, description="Featuring artists")
+    isrc: Optional[str] = Field(None, description="ISRC code")
+    upc: Optional[str] = Field(None, description="UPC/EAN for single if applicable")
+    explicit: bool = Field(False, description="Explicit content flag")
+    genre: Optional[str] = None
+    mood: Optional[str] = None
+    cover_url: Optional[str] = None
+    audio_url: Optional[str] = None
+    release_date: Optional[datetime] = None
+    status: str = Field("draft", description="draft | scheduled | released | archived")
+    ai_mastering: bool = Field(False, description="Enable AI mastering pipeline")
+    metadata: dict = Field(default_factory=dict)
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Release(BaseModel):
+    title: str = Field(..., description="Release title")
+    type: str = Field("single", description="single | ep | album")
+    upc: Optional[str] = None
+    cover_url: Optional[str] = None
+    release_date: Optional[datetime] = None
+    tracks: List[str] = Field(default_factory=list, description="Array of track document IDs")
+    status: str = Field("draft")
+    notes: Optional[str] = None
 
-# Add your own schemas here:
-# --------------------------------------------------
-
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+# Additional modules will define their own models as we expand (events, escrow, merch, etc.)
